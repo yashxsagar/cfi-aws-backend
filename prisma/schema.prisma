@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  providerId   String?  @unique
+  provider     Provider @default(notion)
+  name         String?
+  email        String   @unique
+  databaseId   String?
+  jwtToken     String?  @db.Text
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+}
+
+model LCADisclosure {
+  id                 String       @id @default(uuid()) @db.Uuid
+  jobTitle           String       @db.VarChar(255)
+  socTitle           String       @db.VarChar(255)
+  employerName       String       @db.VarChar(255)
+  tradeNameDba       String?      @db.VarChar(255)
+  worksiteCity       String       @db.VarChar(100)
+  worksiteCounty     String       @db.VarChar(100)
+  worksiteState      String       @default("XX") @db.VarChar(2) // Ensure 2-character uppercase state code
+  worksitePostalCode String       @db.VarChar(5) // Use string with a maximum length of 5 characters
+  wageRateOfPayFrom  Float
+  wageRateOfPayTo    Float?
+  harmonizedWageRate Float
+  prevailingWage     Float
+  pwWageLevel        PwWageLevel?
+  combinedTitle      String       @db.VarChar(255)
+  kmeansCluster      Int
+  industryJobTitle   String       @db.VarChar(255)
+  dbscanCluster      Int
+}
+
+enum PwWageLevel {
+  I
+  II
+  III
+  IV
+}
+
+enum Provider {
+  notion
+  google
+}
