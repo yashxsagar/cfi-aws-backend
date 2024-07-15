@@ -33,7 +33,7 @@ CompX Fairness Indicator enables users to evaluate the fairness of a job compens
 
 - [Node.js](https://nodejs.org/) (v14.x or higher)
 - npm (usually comes with Node.js)
-- A Notion account
+- A Notion user account followed by developer account
 - A Neon hosted PostgreSQL database
 
 ## Installation
