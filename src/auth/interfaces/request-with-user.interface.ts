@@ -6,5 +6,6 @@ export interface RequestWithUser extends Request {
     userId: string;
     username: string;
     accessToken: string;
+    databaseId: string;
   };
 }

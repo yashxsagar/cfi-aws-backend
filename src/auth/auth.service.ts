@@ -22,6 +22,7 @@ export class AuthService {
       username: user.name,
       sub: user.id,
       accessToken: user.accessToken,
+      databaseId: user.databaseId,
     };
     const jwtToken = this.jwtService.sign(payload);
     await this.usersService.storeToken(user.id, jwtToken);

@@ -16,7 +16,11 @@ export class NotionController {
     if (!user || !user.accessToken) {
       throw new Error('User or access token not found');
     }
-    await this.notionService.startPolling(user.accessToken);
+    await this.notionService.startPolling(
+      user.accessToken,
+      user.userId,
+      user.databaseId,
+    );
     return { message: 'Started polling for new entries.' };
   }
 }

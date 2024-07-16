@@ -88,6 +88,10 @@ export class AuthController {
       const notionWorkspaceUrl =
         await this.notionService.getWorkspaceUrl(tokenData);
       console.log(notionWorkspaceUrl);
+
+      // Start polling for the new user
+      await this.notionService.startPolling(tokenData, user.id, databaseId);
+
       return res.redirect(notionWorkspaceUrl);
     } catch (error) {
       console.error('Error during OAuth2 callback:', error);

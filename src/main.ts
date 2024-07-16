@@ -13,6 +13,8 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-  await app.listen(3009);
+  const port = process.env.PORT || 3009; // Use the PORT provided by Elastic Beanstalk
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
