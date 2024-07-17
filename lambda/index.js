@@ -12,6 +12,8 @@ exports.handler = async (event) => {
   const accessToken = event.accessToken;
   const databaseId = event.databaseId;
 
+  console.log(`Starting polling for user ${userId} on database ${databaseId}`);
+
   try {
     const notion = axios.create({
       baseURL: 'https://api.notion.com/v1/',
@@ -20,6 +22,8 @@ exports.handler = async (event) => {
         'Notion-Version': notionVersion,
       },
     });
+
+    console.log('Notion client created');
 
     const response = await notion.post(`databases/${databaseId}/query`, {
       filter: {
@@ -58,7 +62,11 @@ exports.handler = async (event) => {
       },
     });
 
+    console.log('Notion query executed successfully');
+
     const pagesToProcess = response.data.results;
+
+    console.log(`Found ${pagesToProcess.length} pages to process`);
 
     if (pagesToProcess.length > 0) {
       for (const page of pagesToProcess) {
@@ -79,13 +87,22 @@ exports.handler = async (event) => {
           compensationOffered,
         });
 
-        await sqs
-          .sendMessage({
-            QueueUrl: process.env.AWS_SQS_QUEUE_URL,
-            MessageBody: messageBody,
-          })
-          .promise();
+        console.log('Sending message to SQS:', messageBody);
+
+        try {
+          const sqsResonse = await sqs
+            .sendMessage({
+              QueueUrl: process.env.AWS_SQS_QUEUE_URL,
+              MessageBody: messageBody,
+            })
+            .promise();
+          console.log('SQS sendMessage response:', sqsResponse);
+        } catch (sqsError) {
+          console.error('Error sending message to SQS:', sqsError);
+        }
       }
+    } else {
+      console.log('No pages to process');
     }
 
     return {
