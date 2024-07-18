@@ -1,110 +1,117 @@
-const AWS = require('aws-sdk');
 const axios = require('axios');
+const AWS = require('aws-sdk'); // This is necessary to use the AWS SDK provided by Lambda
 
-const sqs = new AWS.SQS();
 const dynamodb = new AWS.DynamoDB.DocumentClient();
+const sqs = new AWS.SQS();
 const notionVersion = '2022-06-28';
 
-const POLLING_INTERVAL = 60 * 1000; // Poll every 60 seconds
-
 exports.handler = async (event) => {
-  const userId = event.userId;
-  const accessToken = event.accessToken;
-  const databaseId = event.databaseId;
-
-  console.log(`Starting polling for user ${userId} on database ${databaseId}`);
+  console.log('Lambda function started.');
 
   try {
-    const notion = axios.create({
-      baseURL: 'https://api.notion.com/v1/',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Notion-Version': notionVersion,
-      },
-    });
+    const params = {
+      TableName: 'CompXPollingTable',
+    };
 
-    console.log('Notion client created');
+    console.log('Scanning DynamoDB table for users.');
+    const data = await dynamodb.scan(params).promise();
+    const users = data.Items;
 
-    const response = await notion.post(`databases/${databaseId}/query`, {
-      filter: {
-        and: [
-          {
-            property: 'Job Title',
-            select: {
-              is_not_empty: true,
+    console.log(`Found ${users.length} users to poll.`);
+    for (const user of users) {
+      const { UserId, AccessToken, DatabaseId } = user;
+
+      console.log(`Processing user ${UserId} with database ${DatabaseId}.`);
+      const notion = axios.create({
+        baseURL: 'https://api.notion.com/v1/',
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+          'Notion-Version': notionVersion,
+        },
+      });
+
+      console.log(`Querying Notion database ${DatabaseId}.`);
+      const response = await notion.post(`databases/${DatabaseId}/query`, {
+        filter: {
+          and: [
+            {
+              property: 'Job Title',
+              select: {
+                is_not_empty: true,
+              },
             },
-          },
-          {
-            property: 'Location',
-            rich_text: {
-              is_not_empty: true,
+            {
+              property: 'Location',
+              rich_text: {
+                is_not_empty: true,
+              },
             },
-          },
-          {
-            property: 'State',
-            select: {
-              is_not_empty: true,
+            {
+              property: 'State',
+              select: {
+                is_not_empty: true,
+              },
             },
-          },
-          {
-            property: 'Compensation Offered',
-            number: {
-              is_not_empty: true,
+            {
+              property: 'Compensation Offered',
+              number: {
+                is_not_empty: true,
+              },
             },
-          },
-          {
-            property: 'Fairness Indicator',
-            rich_text: {
-              is_empty: true,
+            {
+              property: 'Fairness Indicator',
+              rich_text: {
+                is_empty: true,
+              },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      });
 
-    console.log('Notion query executed successfully');
+      const pagesToProcess = response.data.results;
+      console.log(
+        `Found ${pagesToProcess.length} pages to process for user ${UserId}.`,
+      );
 
-    const pagesToProcess = response.data.results;
+      if (pagesToProcess.length > 0) {
+        for (const page of pagesToProcess) {
+          const jobTitle = page.properties['Job Title'].select.name;
+          const location =
+            page.properties['Location'].rich_text[0].text.content;
+          const state = page.properties['State'].select.name;
+          const compensationOffered =
+            page.properties['Compensation Offered'].number;
 
-    console.log(`Found ${pagesToProcess.length} pages to process`);
+          // Push the job to SQS queue
+          const messageBody = JSON.stringify({
+            UserId,
+            AccessToken,
+            pageId: page.id,
+            jobTitle,
+            location,
+            state,
+            compensationOffered,
+          });
 
-    if (pagesToProcess.length > 0) {
-      for (const page of pagesToProcess) {
-        const jobTitle = page.properties['Job Title'].select.name;
-        const location = page.properties['Location'].rich_text[0].text.content;
-        const state = page.properties['State'].select.name;
-        const compensationOffered =
-          page.properties['Compensation Offered'].number;
+          console.log(
+            `Sending message to SQS for user ${UserId}: ${messageBody}`,
+          );
 
-        // Push the job to SQS queue
-        const messageBody = JSON.stringify({
-          userId,
-          accessToken,
-          pageId: page.id,
-          jobTitle,
-          location,
-          state,
-          compensationOffered,
-        });
-
-        console.log('Sending message to SQS:', messageBody);
-
-        try {
-          const sqsResonse = await sqs
+          await sqs
             .sendMessage({
               QueueUrl: process.env.AWS_SQS_QUEUE_URL,
               MessageBody: messageBody,
             })
             .promise();
-          console.log('SQS sendMessage response:', sqsResponse);
-        } catch (sqsError) {
-          console.error('Error sending message to SQS:', sqsError);
+
+          console.log(`Message sent to SQS for user ${UserId}.`);
         }
+      } else {
+        console.log(`No pages to process for user ${UserId}.`);
       }
-    } else {
-      console.log('No pages to process');
     }
 
+    console.log('Polling executed successfully.');
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Polling executed successfully.' }),
