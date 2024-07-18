@@ -1,9 +1,23 @@
 const axios = require('axios');
 const AWS = require('aws-sdk'); // This is necessary to use the AWS SDK provided by Lambda
+const axiosRetry = require('axios-retry').default;
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const sqs = new AWS.SQS();
 const notionVersion = '2022-06-28';
+
+axiosRetry(axios, {
+  retries: 3, // Number of retry attempts
+  retryDelay: (retryCount) => {
+    return retryCount * 1000; // Time between retries in milliseconds
+  },
+  retryCondition: (error) => {
+    // Retry on network errors and 5xx status codes
+    return (
+      axiosRetry.isNetworkError(error) || axiosRetry.isRetryableError(error)
+    );
+  },
+});
 
 exports.handler = async (event) => {
   console.log('Lambda function started.');
@@ -92,6 +106,18 @@ exports.handler = async (event) => {
             state,
             compensationOffered,
           });
+
+          try {
+            await axios.post('https://tabx.io/webhook', webhookData);
+            console.log(`Successfully sent data to webhook for user ${UserId}`);
+          } catch (error) {
+            console.error(
+              `Error sending data to webhook for user ${UserId}: ${error.message}`,
+            );
+            console.error(
+              `Error details: ${error.response ? error.response.data : 'No response data'}`,
+            );
+          }
 
           console.log(
             `Sending message to SQS for user ${UserId}: ${messageBody}`,

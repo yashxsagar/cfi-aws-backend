@@ -12,6 +12,9 @@ import { AuthService } from './auth/auth.service';
 import { UsersService } from './users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { VercelBlobService } from './vercel-blob/vercel-blob.service';
+import { WebhookModule } from './webhook/webhook.module';
+import { WebhookController } from './webhook/webhook.controller';
+import { WebhookService } from './webhook/webhook.service';
 
 @Module({
   imports: [
@@ -21,8 +24,9 @@ import { VercelBlobService } from './vercel-blob/vercel-blob.service';
     GeneratecfiModule,
     UsersModule,
     NotionModule,
+    WebhookModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, WebhookController],
   providers: [
     AppService,
     DatabaseService,
@@ -30,6 +34,7 @@ import { VercelBlobService } from './vercel-blob/vercel-blob.service';
     UsersService,
     JwtService,
     VercelBlobService,
+    WebhookService,
   ],
 })
 export class AppModule {}
