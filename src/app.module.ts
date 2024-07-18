@@ -15,6 +15,8 @@ import { VercelBlobService } from './vercel-blob/vercel-blob.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { WebhookController } from './webhook/webhook.controller';
 import { WebhookService } from './webhook/webhook.service';
+import { GenerateCfiService } from './generatecfi/generatecfi.service';
+import { NotionService } from './notion/notion.service';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { WebhookService } from './webhook/webhook.service';
     JwtService,
     VercelBlobService,
     WebhookService,
+    GenerateCfiService,
+    NotionService,
   ],
 })
 export class AppModule {}
