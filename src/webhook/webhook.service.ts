@@ -12,6 +12,16 @@ export class WebhookService {
   ) {}
 
   async processWebhook(data: any) {
+    switch (data.jobTitle) {
+      case 'Religious Worker - Priests Ministers - All Religion':
+        data.jobTitle = 'Religious Worker - Priests, Ministers - All Religions';
+      case 'Animation Design':
+        data.jobTitle = 'Animation Design, VFX & CGI';
+      default:
+        console.log(
+          `Same ${data.jobTitle} used as the one passed to the webhook by the lambda function`,
+        );
+    }
     const {
       UserId,
       AccessToken,
