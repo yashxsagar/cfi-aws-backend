@@ -108,8 +108,11 @@ exports.handler = async (event) => {
           });
 
           try {
-            await axios.post('https://tabx.io/webhook', webhookData);
+            await axios.post('https://tabx.io/webhook', messageBody, {
+              headers: { 'Content-Type': 'application/json' },
+            });
             console.log(`Successfully sent data to webhook for user ${UserId}`);
+            console.log(`Data sent to webhook is: ${messageBody}`);
           } catch (error) {
             console.error(
               `Error sending data to webhook for user ${UserId}: ${error.message}`,
@@ -138,6 +141,19 @@ exports.handler = async (event) => {
     }
 
     console.log('Polling executed successfully.');
+
+    // Schedule the next run in 10 seconds
+    await new Promise((resolve) => setTimeout(resolve, 20000));
+
+    // Recursively invoke the Lambda function
+    const lambda = new AWS.Lambda();
+    await lambda
+      .invoke({
+        FunctionName: 'CompXPollingFunction',
+        InvocationType: 'Event',
+      })
+      .promise();
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Polling executed successfully.' }),
