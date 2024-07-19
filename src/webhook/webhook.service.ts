@@ -15,8 +15,10 @@ export class WebhookService {
     switch (data.jobTitle) {
       case 'Religious Worker - Priests Ministers - All Religion':
         data.jobTitle = 'Religious Worker - Priests, Ministers - All Religions';
+        break;
       case 'Animation Design':
         data.jobTitle = 'Animation Design, VFX & CGI';
+        break;
       default:
         console.log(
           `Same ${data.jobTitle} used as the one passed to the webhook by the lambda function`,
