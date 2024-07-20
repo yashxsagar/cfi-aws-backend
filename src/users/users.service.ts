@@ -42,10 +42,15 @@ export class UsersService {
     return user;
   }
 
-  async storeToken(userId: string, token: string): Promise<void> {
+  async storeToken(
+    userId: string,
+    accessToken: string,
+    refreshToken: string,
+    token: string,
+  ): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
-      data: { jwtToken: token },
+      data: { jwtToken: token, accessToken, refreshToken },
     });
   }
 
