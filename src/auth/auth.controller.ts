@@ -53,13 +53,13 @@ export class AuthController {
   @Get('callback')
   async callback(@Query('code') code: string, @Res() res: Response) {
     try {
+      console.log('Notion issued code prior to profile fetch is: ' + code);
       const tokenData = await this.notionOAuth2Strategy.getToken(code);
-
       const userProfile = await axios.get(
         'https://api.notion.com/v1/users/me',
         {
           headers: {
-            Authorization: `Bearer ${tokenData}`,
+            Authorization: `Bearer ${JSON.stringify(tokenData)}`,
             'Notion-Version': '2022-06-28',
           },
         },
@@ -87,12 +87,17 @@ export class AuthController {
         // secure: this.configService.get('NODE_ENV') === 'production',
       });
 
-      const notionWorkspaceUrl =
-        await this.notionService.getWorkspaceUrl(tokenData);
+      const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
+        tokenData.access_token,
+      );
       console.log(notionWorkspaceUrl);
 
       // Start polling for the new user
-      await this.notionService.startPolling(tokenData, user.id, databaseId);
+      await this.notionService.startPolling(
+        tokenData.access_token,
+        user.id,
+        databaseId,
+      );
 
       return res.redirect(notionWorkspaceUrl);
     } catch (error) {
