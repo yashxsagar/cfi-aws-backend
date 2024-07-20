@@ -59,7 +59,7 @@ export class AuthController {
         'https://api.notion.com/v1/users/me',
         {
           headers: {
-            Authorization: `Bearer ${JSON.stringify(tokenData)}`,
+            Authorization: `Bearer ${tokenData.acces_token}`,
             'Notion-Version': '2022-06-28',
           },
         },
