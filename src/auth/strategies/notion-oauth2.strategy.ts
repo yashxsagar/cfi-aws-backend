@@ -79,7 +79,7 @@ export class NotionOAuth2Strategy extends PassportStrategy(Strategy, 'notion') {
         },
       },
     );
-    console.log('Access Token:', response.data.access_token);
+    console.log('Access Token:', response.data);
     // return response.data.access_token;
     return response.data;
   }

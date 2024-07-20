@@ -65,14 +65,16 @@ export class AuthController {
         },
       );
       console.log(userProfile.data.bot.owner);
-      const database = await this.notionService.findOrCreateDatabase(tokenData);
+      const database = await this.notionService.findOrCreateDatabase(
+        tokenData.access_token,
+      );
       const databaseId = database.id;
       const user = await this.authService.validateUser({
         providerId: userProfile.data.bot.owner.user.id,
         name: userProfile.data.bot.owner.user.name,
         email: userProfile.data.bot.owner.user.person.email,
         databaseId,
-        accessToken: tokenData,
+        accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
       });
 
