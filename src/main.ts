@@ -13,7 +13,10 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-  app.enableCors({ origin: 'http://localhost:4000', credentials: true });
+  app.enableCors({
+    origin: ['http://localhost:4000', 'https://cfi-web-app.vercel.app/'],
+    credentials: true,
+  });
   const port = process.env.PORT || 8080; // Use the PORT provided by Elastic Beanstalk
   await app.listen(port);
   console.log(`Application is running on: ${await app.getUrl()}`);
