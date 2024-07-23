@@ -73,6 +73,7 @@ export class AuthController {
         providerId: userProfile.data.bot.owner.user.id,
         name: userProfile.data.bot.owner.user.name,
         email: userProfile.data.bot.owner.user.person.email,
+        image: userProfile.data.bot.owner.user.avatar_url,
         databaseId,
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
@@ -84,6 +85,7 @@ export class AuthController {
       res.cookie('jwt', jwt.jwtToken, {
         httpOnly: true,
         maxAge: 180 * 24 * 60 * 60 * 1000, // 180 days in milliseconds
+        sameSite: 'none',
         // secure: this.configService.get('NODE_ENV') === 'production',
       });
 
