@@ -86,6 +86,7 @@ export class AuthController {
         httpOnly: true,
         maxAge: 180 * 24 * 60 * 60 * 1000, // 180 days in milliseconds
         sameSite: 'none',
+        secure: true,
         // secure: this.configService.get('NODE_ENV') === 'production',
       });
 
