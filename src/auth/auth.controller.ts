@@ -82,7 +82,7 @@ export class AuthController {
       //   await this.notionService.findOrCreateDatabase(tokenData.access_token);
       const jwt = await this.authService.login(user);
       console.log(jwt);
-      res.cookie('jwt', jwt, {
+      res.cookie('jwt', jwt.jwtToken, {
         httpOnly: true,
         maxAge: 180 * 24 * 60 * 60 * 1000, // 180 days in milliseconds
         sameSite: 'none',
