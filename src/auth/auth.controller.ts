@@ -82,13 +82,13 @@ export class AuthController {
       //   await this.notionService.findOrCreateDatabase(tokenData.access_token);
       const jwt = await this.authService.login(user);
       console.log(jwt);
-      res.cookie('jwt', jwt.jwtToken, {
-        httpOnly: true,
-        maxAge: 180 * 24 * 60 * 60 * 1000, // 180 days in milliseconds
-        sameSite: 'none',
-        secure: true,
-        // secure: this.configService.get('NODE_ENV') === 'production',
-      });
+      //   res.cookie('jwt', jwt.jwtToken, {
+      //     httpOnly: true,
+      //     maxAge: 180 * 24 * 60 * 60 * 1000, // 180 days in milliseconds
+      //     sameSite: 'none',
+      //     secure: true,
+      //     // secure: this.configService.get('NODE_ENV') === 'production',
+      //   });
 
       const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
         tokenData.access_token,
@@ -102,7 +102,12 @@ export class AuthController {
         databaseId,
       );
 
-      return res.redirect(notionWorkspaceUrl);
+      //   return res.redirect(notionWorkspaceUrl);
+
+      // Redirect to the Next.js API route with the JWT token and workspace URL
+      return res.redirect(
+        `${this.configService.get('NEXT_APP_URL')}/api/auth/callback?token=${jwt.jwtToken}&workspaceUrl=${encodeURIComponent(notionWorkspaceUrl)}`,
+      );
     } catch (error) {
       console.error('Error during OAuth2 callback:', error);
       return res.status(500).json({ message: 'Internal server error' });
