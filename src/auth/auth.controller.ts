@@ -36,7 +36,7 @@ export class AuthController {
         const user = await this.usersService.findById(decoded.sub);
         console.log(
           'The decoded user obtained from the Next js request header is: ' +
-            user,
+            JSON.stringify(user),
         );
         if (user) {
           const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
