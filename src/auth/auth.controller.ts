@@ -25,12 +25,19 @@ export class AuthController {
   async login(@Req() req: Request, @Res() res: Response) {
     // This will initiate the Notion OAuth2 login flow
     const token = req.cookies.jwt;
+    console.log(
+      'The cookie received from the Next js request header is: ' + token,
+    );
     if (token) {
       try {
         const decoded = this.jwtService.verify(token, {
           secret: this.configService.get('JWT_SECRET'),
         });
         const user = await this.usersService.findById(decoded.sub);
+        console.log(
+          'The decoded user obtained from the Next js request header is: ' +
+            user,
+        );
         if (user) {
           const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
             user.accessToken,
