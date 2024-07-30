@@ -11,6 +11,7 @@ export class UsersService {
       providerId,
       name,
       email,
+      image,
       //   workspaceName,
       databaseId,
       accessToken,
@@ -35,7 +36,13 @@ export class UsersService {
     } else {
       user = await this.prisma.user.update({
         where: { providerId },
-        data: { accessToken, refreshToken, name, email },
+        data: {
+          name,
+          email,
+          databaseId,
+          accessToken,
+          refreshToken,
+        },
       });
     }
 
