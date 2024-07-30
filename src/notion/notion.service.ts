@@ -28,28 +28,67 @@ export class NotionService {
     accessToken: string,
     duplicated_template_id?: string,
   ) {
-    try {
-      this.notion = new Client({ auth: accessToken });
-      console.log('The users access token is:' + accessToken);
-      if (duplicated_template_id) {
-        const database = await this.notion.databases.retrieve({
-          database_id: duplicated_template_id,
-        });
+    this.notion = new Client({ auth: accessToken });
+    console.log('The users access token is:' + accessToken);
+
+    if (duplicated_template_id) {
+      try {
+        // const database = await this.notion.databases.retrieve({
+        //   database_id: duplicated_template_id,
+        // });
+        const database = await this.retryFetchDatabase(
+          duplicated_template_id,
+          accessToken,
+        );
         console.log(database);
         return database;
-      } else {
-        return undefined;
+      } catch (error) {
+        this.logger.error(
+          `Error finding or creating database: ${error.message}`,
+        );
+        throw error;
         // const database = await this.findDatabase();
         // if (database) {
         //   this.logger.log(`Database found: ${database.id}`);
         //   return database;
         // }
+        // throw new Error('No database found. Please duplicate the template.');
       }
-      throw new Error('No database found. Please duplicate the template.');
-    } catch (error) {
-      this.logger.error(`Error finding or creating database: ${error.message}`);
-      throw error;
+    } else {
+      return undefined;
     }
+  }
+
+  private async retryFetchDatabase(
+    duplicated_databaseId: string,
+    accessToken: string,
+    retries = 5,
+    delay = 1000,
+  ) {
+    this.notion = new Client({ auth: accessToken });
+    let attempt = 0;
+
+    while (attempt < retries) {
+      try {
+        return await this.notion.databases.retrieve({
+          database_id: duplicated_databaseId,
+        });
+      } catch (error) {
+        if (error.status === 404 && attempt < retries - 1) {
+          attempt++;
+          this.logger.warn(
+            `Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`,
+          );
+          await new Promise((res) => setTimeout(res, delay));
+          delay *= 2; // Exponential backoff
+        } else {
+          throw error; // Rethrow if not a 404 or out of retries
+        }
+      }
+    }
+    throw new Error(
+      `Failed to retrieve database with ID: ${duplicated_databaseId} after ${retries} attempts.`,
+    );
   }
 
   private async findDatabase() {
