@@ -74,6 +74,7 @@ export class AuthController {
       console.log(userProfile.data.bot.owner);
       const database = await this.notionService.findOrCreateDatabase(
         tokenData.access_token,
+        tokenData.duplicated_template_id,
       );
       const databaseId = database.id;
       const user = await this.authService.validateUser({

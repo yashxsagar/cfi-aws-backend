@@ -24,13 +24,24 @@ export class NotionService {
     private readonly databaseService: DatabaseService,
   ) {}
 
-  async findOrCreateDatabase(accessToken: string) {
+  async findOrCreateDatabase(
+    accessToken: string,
+    duplicated_template_id?: string,
+  ) {
     try {
       this.notion = new Client({ auth: accessToken });
-      const database = await this.findDatabase();
-      if (database) {
-        this.logger.log(`Database found: ${database.id}`);
-        return database;
+      if (duplicated_template_id) {
+        const page = await this.notion.pages.retrieve({
+          page_id: duplicated_template_id,
+        });
+        console.log(page);
+        return page;
+      } else {
+        const database = await this.findDatabase();
+        if (database) {
+          this.logger.log(`Database found: ${database.id}`);
+          return database;
+        }
       }
       throw new Error('No database found. Please duplicate the template.');
     } catch (error) {
@@ -214,7 +225,7 @@ export class NotionService {
       if (response) {
         const database = response;
         console.log(database);
-        console.log(JSON.stringify(database));
+        // console.log(JSON.stringify(database));
         // return `https://www.notion.so/${database.id.replace(/-/g, '')}`;
         return database.url;
       } else {
