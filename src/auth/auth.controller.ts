@@ -72,11 +72,27 @@ export class AuthController {
         },
       );
       console.log(userProfile.data.bot.owner);
+      let databaseId = undefined;
       const database = await this.notionService.findOrCreateDatabase(
         tokenData.access_token,
         tokenData.duplicated_template_id,
       );
-      const databaseId = database.id;
+      if (database == undefined) {
+        try {
+          const existingUser = await this.usersService.findByEmail(
+            userProfile.data.bot.owner.user.person.email,
+          );
+          if (existingUser) {
+            databaseId = existingUser.databaseId;
+          } else {
+            return res.redirect('/auth/notion');
+          }
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        databaseId = database.id;
+      }
       const user = await this.authService.validateUser({
         providerId: userProfile.data.bot.owner.user.id,
         name: userProfile.data.bot.owner.user.name,

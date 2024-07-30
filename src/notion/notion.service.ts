@@ -30,18 +30,20 @@ export class NotionService {
   ) {
     try {
       this.notion = new Client({ auth: accessToken });
+      console.log('The users access token is:' + accessToken);
       if (duplicated_template_id) {
-        const page = await this.notion.pages.retrieve({
-          page_id: duplicated_template_id,
+        const database = await this.notion.databases.retrieve({
+          database_id: duplicated_template_id,
         });
-        console.log(page);
-        return page;
+        console.log(database);
+        return database;
       } else {
-        const database = await this.findDatabase();
-        if (database) {
-          this.logger.log(`Database found: ${database.id}`);
-          return database;
-        }
+        return undefined;
+        // const database = await this.findDatabase();
+        // if (database) {
+        //   this.logger.log(`Database found: ${database.id}`);
+        //   return database;
+        // }
       }
       throw new Error('No database found. Please duplicate the template.');
     } catch (error) {
