@@ -40,7 +40,7 @@ export class AuthController {
         );
         if (user) {
           const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
-            user.accessToken,
+            user.databaseId,
           );
           return res.redirect(notionWorkspaceUrl);
         }
@@ -97,9 +97,8 @@ export class AuthController {
       //     // secure: this.configService.get('NODE_ENV') === 'production',
       //   });
 
-      const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
-        tokenData.access_token,
-      );
+      const notionWorkspaceUrl =
+        await this.notionService.getWorkspaceUrl(databaseId);
       console.log(notionWorkspaceUrl);
 
       // Start polling for the new user

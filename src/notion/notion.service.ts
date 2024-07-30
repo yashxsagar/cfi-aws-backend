@@ -198,19 +198,25 @@ export class NotionService {
     }
   }
 
-  async getWorkspaceUrl(accessToken: string): Promise<string> {
+  async getWorkspaceUrl(databaseId: string): Promise<string> {
     try {
-      const response = await this.notion.search({
-        query: 'CompX Fairness Indicator',
-        filter: {
-          value: 'database',
-          property: 'object',
-        },
-      });
+      // const response = await this.notion.search({
+      //   query: 'CompX Fairness Indicator',
+      //   filter: {
+      //     value: 'database',
+      //     property: 'object',
+      //   },
+      // });
+      const response = (await this.notion.databases.retrieve({
+        database_id: databaseId,
+      })) as { url: string };
 
-      if (response.results.length) {
-        const database = response.results[0] as DatabaseObjectResponse;
-        return `https://www.notion.so/${database.id.replace(/-/g, '')}`;
+      if (response) {
+        const database = response;
+        console.log(database);
+        console.log(JSON.stringify(database));
+        // return `https://www.notion.so/${database.id.replace(/-/g, '')}`;
+        return database.url;
       } else {
         throw new Error('No CompX Fairness Indicator database found.');
       }
