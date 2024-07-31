@@ -1,4 +1,10 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Client } from '@notionhq/client';
 import { GenerateCfiService } from '../generatecfi/generatecfi.service';
 import { DatabaseService } from '../database/database.service';
@@ -273,8 +279,16 @@ export class NotionService {
         throw new Error('No CompX Fairness Indicator database found.');
       }
     } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        throw new UnauthorizedException(
+          'Notion API access unauthorized or forbidden.',
+        );
+      }
       this.logger.error(`Error getting workspace URL: ${error.message}`);
-      throw error;
+      throw new InternalServerErrorException(
+        'Failed to retrieve workspace URL.',
+      );
+      // throw error;
     }
   }
 

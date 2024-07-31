@@ -1,4 +1,12 @@
-import { Controller, Get, Req, Res, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Req,
+  Res,
+  UseGuards,
+  Query,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { NotionService } from '../notion/notion.service';
@@ -39,13 +47,28 @@ export class AuthController {
             JSON.stringify(user),
         );
         if (user) {
-          const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
-            user.databaseId,
-          );
-          return res.redirect(notionWorkspaceUrl);
+          try {
+            const notionWorkspaceUrl = await this.notionService.getWorkspaceUrl(
+              user.databaseId,
+            );
+            return res.redirect(notionWorkspaceUrl);
+          } catch (error) {
+            if (error instanceof UnauthorizedException) {
+              console.log(
+                'Redirecting to Notion OAuth flow due to authentication failure.',
+              );
+              return res.redirect('/auth/notion');
+            }
+            throw Error;
+          }
         }
       } catch (error) {
         // Token validation failed, proceed with OAuth2 flow
+        // If JWT verification fails or other errors
+        console.error(
+          `Error during user authentication or retreival from database: ${error.message}`,
+        );
+        return res.redirect('/auth/notion');
       }
     }
     return res.redirect('/auth/notion'); // Trigger the OAuth2 flow
